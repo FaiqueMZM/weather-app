@@ -16,5 +16,16 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
         emit(WeatherError('Failed to fetch weather: ${e.toString()}'));
       }
     });
+
+    on<FetchCitySuggestions>((event, emit) async {
+      try {
+        final suggestions = await weatherApiClient.getCitySuggestions(
+          event.query,
+        );
+        emit(CitySuggestionsLoaded(suggestions));
+      } catch (e) {
+        emit(WeatherError('Failed to load suggestions: ${e.toString()}'));
+      }
+    });
   }
 }

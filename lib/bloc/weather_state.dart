@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:weather_app/weather.dart';
+import 'package:weather_app/models/city_suggestions.dart';
+import 'package:weather_app/models/weather.dart';
 
 abstract class WeatherState extends Equatable {
   const WeatherState();
@@ -28,4 +29,13 @@ class WeatherError extends WeatherState {
 
   @override
   List<Object> get props => [message];
+}
+
+class CitySuggestionsLoaded extends WeatherState {
+  final List<CitySuggestion> suggestions;
+
+  const CitySuggestionsLoaded(this.suggestions);
+
+  @override
+  List<Object> get props => [suggestions];
 }

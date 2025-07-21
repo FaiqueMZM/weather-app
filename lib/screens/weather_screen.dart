@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:weather_app/bloc/weather_bloc.dart';
 import 'package:weather_app/bloc/weather_event.dart';
 import 'package:weather_app/bloc/weather_state.dart';
+import 'package:weather_app/models/city_suggestions.dart';
 
 class WeatherScreen extends StatefulWidget {
   const WeatherScreen({super.key});
@@ -28,12 +29,38 @@ class _WeatherScreenState extends State<WeatherScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: _cityController,
-              decoration: const InputDecoration(
-                hintText: 'Enter city name',
-                border: OutlineInputBorder(),
-              ),
+            Autocomplete<CitySuggestion>(
+              optionsBuilder: (TextEditingValue textEditingValue) async {
+                if (textEditingValue.text.isEmpty) {
+                  return const Iterable<CitySuggestion>.empty();
+                }
+                context.read<WeatherBloc>().add(
+                  FetchCitySuggestions(textEditingValue.text),
+                );
+                return await _getSuggestions(context);
+              },
+              displayStringForOption: (CitySuggestion option) => option.name,
+              fieldViewBuilder:
+                  (context, controller, focusNode, onFieldSubmitted) {
+                    _cityController.value = controller.value;
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter city name',
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (value) {
+                        if (value.isNotEmpty) {
+                          context.read<WeatherBloc>().add(FetchWeather(value));
+                        }
+                      },
+                    );
+                  },
+              onSelected: (CitySuggestion selection) {
+                _cityController.text = selection.name;
+                context.read<WeatherBloc>().add(FetchWeather(selection.name));
+              },
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -50,6 +77,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
             Expanded(
               child: BlocBuilder<WeatherBloc, WeatherState>(
                 builder: (context, state) {
+                  print('BlocBuilder state: $state'); // Debug print
                   if (state is WeatherInitial) {
                     return const Center(
                       child: Text('Enter a city to see the weather'),
@@ -80,12 +108,16 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             state.weather.iconUrl,
                             width: 64,
                             height: 64,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.error),
                           ),
                         ],
                       ),
                     );
                   } else if (state is WeatherError) {
                     return Center(child: Text(state.message));
+                  } else if (state is CitySuggestionsLoaded) {
+                    return Container(); // Suggestions handled by Autocomplete
                   }
                   return Container();
                 },
@@ -95,5 +127,13 @@ class _WeatherScreenState extends State<WeatherScreen> {
         ),
       ),
     );
+  }
+
+  Future<Iterable<CitySuggestion>> _getSuggestions(BuildContext context) async {
+    final state = context.read<WeatherBloc>().state;
+    if (state is CitySuggestionsLoaded) {
+      return state.suggestions;
+    }
+    return [];
   }
 }
