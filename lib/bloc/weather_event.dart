@@ -24,3 +24,19 @@ class FetchCitySuggestions extends WeatherEvent {
   @override
   List<Object> get props => [query];
 }
+
+class ToggleTemperatureUnit extends WeatherEvent {
+  const ToggleTemperatureUnit();
+
+  @override
+  List<Object> get props => [];
+}
+
+class FetchWeatherAndForecast extends WeatherEvent {
+  final String city;
+
+  const FetchWeatherAndForecast(this.city);
+
+  @override
+  List<Object> get props => [city];
+}

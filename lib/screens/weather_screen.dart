@@ -52,14 +52,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
                       ),
                       onSubmitted: (value) {
                         if (value.isNotEmpty) {
-                          context.read<WeatherBloc>().add(FetchWeather(value));
+                          context.read<WeatherBloc>().add(
+                            FetchWeatherAndForecast(value),
+                          );
                         }
                       },
                     );
                   },
               onSelected: (CitySuggestion selection) {
                 _cityController.text = selection.name;
-                context.read<WeatherBloc>().add(FetchWeather(selection.name));
+                context.read<WeatherBloc>().add(
+                  FetchWeatherAndForecast(selection.name),
+                );
               },
             ),
             const SizedBox(height: 16),
@@ -67,11 +71,18 @@ class _WeatherScreenState extends State<WeatherScreen> {
               onPressed: () {
                 if (_cityController.text.isNotEmpty) {
                   context.read<WeatherBloc>().add(
-                    FetchWeather(_cityController.text),
+                    FetchWeatherAndForecast(_cityController.text),
                   );
                 }
               },
               child: const Text('Get Weather'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                context.read<WeatherBloc>().add(const ToggleTemperatureUnit());
+              },
+              child: const Text('Toggle °C/°F'),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -97,7 +108,9 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             ),
                           ),
                           Text(
-                            '${state.weather.temperature}°C',
+                            state.unit == TemperatureUnit.celsius
+                                ? '${state.weather.temperatureCelsius}°C'
+                                : '${state.weather.temperatureFahrenheit}°F',
                             style: const TextStyle(fontSize: 32),
                           ),
                           Text(
@@ -110,6 +123,84 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             height: 64,
                             errorBuilder: (context, error, stackTrace) =>
                                 const Icon(Icons.error),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else if (state is WeatherForecastLoaded) {
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          // Current Weather
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  state.currentWeather.city,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  state.unit == TemperatureUnit.celsius
+                                      ? '${state.currentWeather.temperatureCelsius}°C'
+                                      : '${state.currentWeather.temperatureFahrenheit}°F',
+                                  style: const TextStyle(fontSize: 32),
+                                ),
+                                Text(
+                                  state.currentWeather.condition,
+                                  style: const TextStyle(fontSize: 20),
+                                ),
+                                Image.network(
+                                  state.currentWeather.iconUrl,
+                                  width: 64,
+                                  height: 64,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(Icons.error),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // 5-Day Forecast
+                          SizedBox(
+                            height: 120,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: state.forecast.length,
+                              itemBuilder: (context, index) {
+                                final forecast = state.forecast[index];
+                                return Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      children: [
+                                        Text(
+                                          forecast.date,
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                        Image.network(
+                                          forecast.iconUrl,
+                                          width: 40,
+                                          height: 40,
+                                          errorBuilder:
+                                              (context, error, stackTrace) =>
+                                                  const Icon(Icons.error),
+                                        ),
+                                        Text(
+                                          state.unit == TemperatureUnit.celsius
+                                              ? '${forecast.temperatureCelsius}°C'
+                                              : '${forecast.temperatureFahrenheit}°F',
+                                          style: const TextStyle(fontSize: 16),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ],
                       ),

@@ -44,4 +44,20 @@ class WeatherApiClient {
       );
     }
   }
+
+  Future<List<Weather>> getForecast(String city) async {
+    final url = Uri.parse(
+      '$_baseUrl/forecast.json?key=$_apiKey&q=$city&days=5&aqi=no',
+    );
+    print('Forecast URL: $url'); // Debug print
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final forecastDays = json['forecast']['forecastday'] as List;
+      return forecastDays.map((day) => Weather.fromJson(day)).toList();
+    } else {
+      throw Exception('Failed to load forecast: ${response.statusCode}');
+    }
+  }
 }
