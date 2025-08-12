@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:weather_app/models/city_suggestions.dart';
@@ -9,8 +10,8 @@ class WeatherApiClient {
   final String? _baseUrl = dotenv.env['WEATHER_API_BASE_URL'];
 
   WeatherApiClient() {
-    print('API Key: $_apiKey'); // Debug print
-    print('Base URL: $_baseUrl'); // Debug print
+    debugPrint('API Key: $_apiKey');
+    debugPrint('Base URL: $_baseUrl');
     if (_apiKey == null || _baseUrl == null) {
       throw Exception('API key or base URL not found in .env file');
     }
@@ -18,7 +19,7 @@ class WeatherApiClient {
 
   Future<Weather> getWeather(String city) async {
     final url = Uri.parse('$_baseUrl/current.json?key=$_apiKey&q=$city&aqi=no');
-    print('Request URL: $url'); // Debug print
+    debugPrint('Request URL: $url');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -32,7 +33,7 @@ class WeatherApiClient {
   Future<List<CitySuggestion>> getCitySuggestions(String query) async {
     if (query.isEmpty) return [];
     final url = Uri.parse('$_baseUrl/search.json?key=$_apiKey&q=$query');
-    print('Suggestion URL: $url'); // Debug print
+    debugPrint('Suggestion URL: $url');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
@@ -49,7 +50,7 @@ class WeatherApiClient {
     final url = Uri.parse(
       '$_baseUrl/forecast.json?key=$_apiKey&q=$city&days=5&aqi=no',
     );
-    print('Forecast URL: $url'); // Debug print
+    debugPrint('Forecast URL: $url');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
